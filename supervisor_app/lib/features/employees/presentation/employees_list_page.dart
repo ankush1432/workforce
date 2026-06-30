@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supervisor_app/features/employees/domain/face_registration_status.dart';
 import 'package:supervisor_app/features/employees/presentation/employees_provider.dart';
 import 'package:supervisor_app/features/employees/presentation/widgets/face_status_chip.dart';
+import 'package:supervisor_app/l10n/app_localizations.dart';
 import 'package:supervisor_app/shared/widgets/empty_state.dart';
 import 'package:supervisor_app/shared/widgets/loading_view.dart';
 
@@ -12,17 +13,24 @@ class EmployeesListPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final employees = ref.watch(employeesProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Employees'),
+        title: Row(
+          children: [
+            Image.asset("assets/images/app_logo.png",width: 35,height: 35,),
+            SizedBox(width: 24,),
+            Text(l10n.employees),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => refreshEmployeesCache(ref),
-            tooltip: 'Refresh',
+            tooltip: l10n.refresh,
           ),
         ],
       ),
@@ -35,7 +43,7 @@ class EmployeesListPage extends ConsumerWidget {
             children: [
               SizedBox(
                 height: MediaQuery.sizeOf(context).height * 0.5,
-                child: Center(child: Text('Error: $e')),
+                child: Center(child: Text('${l10n.error}: $e')),
               ),
             ],
           ),
@@ -43,7 +51,7 @@ class EmployeesListPage extends ConsumerWidget {
             if (list.isEmpty) {
               return  ListView(
                 physics: AlwaysScrollableScrollPhysics(),
-                children: [EmptyState(message: 'No employees found')],
+                children: [EmptyState(message: l10n.noEmployeesFound)],
               );
             }
 
@@ -64,7 +72,7 @@ class EmployeesListPage extends ConsumerWidget {
                   ),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
-                    onTap: () => context.push('/employees/${emp.id}'),
+                    onTap: () => context.push('/employees/${emp.id}', extra: emp),
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Row(
@@ -119,7 +127,7 @@ class EmployeesListPage extends ConsumerWidget {
                                     visualDensity: VisualDensity.compact,
                                     padding: const EdgeInsets.symmetric(horizontal: 12),
                                   ),
-                                  child: const Text('Register'),
+                                  child: Text(l10n.register),
                                 ),
                               ],
                             ],

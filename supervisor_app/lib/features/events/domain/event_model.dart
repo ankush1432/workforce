@@ -7,6 +7,7 @@ class EventModel {
     required this.startDate,
     required this.endDate,
     this.bannerImage,
+    this.bannerImageUrl,
     required this.status,
   });
 
@@ -17,6 +18,7 @@ class EventModel {
   final String startDate;
   final String endDate;
   final String? bannerImage;
+  final String? bannerImageUrl;
   final String status;
 
   factory EventModel.fromJson(Map<String, dynamic> json) => EventModel(
@@ -27,6 +29,7 @@ class EventModel {
         startDate: json['start_date'] as String,
         endDate: json['end_date'] as String,
         bannerImage: json['banner_image'] as String?,
+        bannerImageUrl: json['banner_image_url'] as String?,
         status: json['status'] as String? ?? 'draft',
       );
 
@@ -38,6 +41,7 @@ class EventModel {
         'start_date': startDate,
         'end_date': endDate,
         'banner_image': bannerImage,
+        'banner_image_url': bannerImageUrl,
         'status': status,
       };
 }

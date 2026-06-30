@@ -16,6 +16,10 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'company_id' => ['required', 'exists:companies,id'],
             'site_id' => ['required', 'exists:sites,id'],
+            'supervisor_id' => ['required', 'exists:supervisors,id'],
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'designation_id' => ['nullable', 'exists:designations,id'],
+            'shift_id' => ['nullable', 'exists:shifts,id'],
             'employee_code' => ['required', 'string', 'max:50', 'unique:employees,employee_code'],
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],

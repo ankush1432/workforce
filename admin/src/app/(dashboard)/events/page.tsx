@@ -76,6 +76,25 @@ export default function EventsPage() {
         data={data ?? []}
         emptyMessage="No events yet."
         columns={[
+          {
+            key: "banner_image",
+            header: "Banner",
+            render: (r) =>
+              r.banner_image_url ? (
+                <img
+                  src={r.banner_image_url}
+                  alt={r.title}
+                  className="h-12 w-20 object-cover rounded"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <div className="h-12 w-20 bg-slate-100 rounded flex items-center justify-center text-slate-400 text-xs">
+                  No image
+                </div>
+              ),
+          },
           { key: "title", header: "Title" },
           { key: "location", header: "Location", render: (r) => r.location ?? "—" },
           {

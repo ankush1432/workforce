@@ -16,6 +16,10 @@ class VerifyFaceRequest extends FormRequest
         return [
             'embedding' => ['required', 'array', 'min:128'],
             'embedding.*' => ['numeric'],
+            'face_image' => ['nullable', 'string'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'device_id' => ['nullable', 'string'],
         ];
     }
 }

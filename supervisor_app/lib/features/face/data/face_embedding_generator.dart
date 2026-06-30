@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
@@ -140,76 +140,101 @@ class FaceEmbeddingGenerator {
       throw ArgumentError('InputImage must have filePath for FaceNet pipeline');
     }
 
-    final bytes = await File(path).readAsBytes();
-    final faces = await _captureDetector.processImage(inputImage);
+    Uint8List? bytes;
+    img.Image? oriented;
+    
+    try {
+      bytes = await File(path).readAsBytes();
+      final faces = await _captureDetector.processImage(inputImage);
 
-    if (faces.isEmpty) {
-      throw StateError('No face detected');
+      if (faces.isEmpty) {
+        throw StateError('No face detected');
+      }
+      if (faces.length > 1) {
+        throw StateError('Multiple faces detected — only one person allowed');
+      }
+
+      final face = faces.first;
+      final rotation = inputImage.metadata?.rotation ?? InputImageRotation.rotation0deg;
+      oriented = _preprocessor.decodeAndOrient(bytes, rotation);
+      final width = oriented.width;
+      final height = oriented.height;
+
+      final faceCrop = _preprocessor.cropFaceRegion(oriented, face, width, height);
+      final sharpness = _preprocessor.estimateSharpness(faceCrop);
+      final brightness = _preprocessor.estimateBrightness(faceCrop);
+
+      // Save cropped face image for inspection
+      await _preprocessor.saveCroppedFaceImage(faceCrop, suffix: '_registration');
+
+      final quality = evaluateQuality(
+        face: face,
+        imageWidth: width,
+        imageHeight: height,
+        sharpness: sharpness,
+        brightness: brightness,
+      );
+
+      if (!quality.isAcceptable) {
+        throw StateError(quality.message);
+      }
+
+      if (requireLiveness && livenessSession != null && !livenessSession.isComplete) {
+        throw StateError('Complete liveness checks first');
+      }
+
+      final tensor = await _preprocessor.preprocessFaceFromBytes(
+        imageBytes: bytes,
+        face: face,
+        imageWidth: width,
+        imageHeight: height,
+        rotation: rotation,
+      );
+
+      final embedding = await _facenet.runInference(tensor);
+
+      return FaceEmbeddingResult(
+        embedding: embedding,
+        qualityScore: quality.score,
+        livenessPassed: livenessSession?.isComplete ?? !requireLiveness,
+      );
+    } catch (e) {
+      debugPrint('Error generating embedding: $e');
+      rethrow;
+    } finally {
+      // Clean up resources
+      oriented = null;
+      bytes = null;
     }
-    if (faces.length > 1) {
-      throw StateError('Multiple faces detected — only one person allowed');
-    }
-
-    final face = faces.first;
-    final rotation = inputImage.metadata?.rotation ?? InputImageRotation.rotation0deg;
-    final oriented = _preprocessor.decodeAndOrient(bytes, rotation);
-    final width = oriented.width;
-    final height = oriented.height;
-
-    final faceCrop = _preprocessor.cropFaceRegion(oriented, face, width, height);
-    final sharpness = _preprocessor.estimateSharpness(faceCrop);
-    final brightness = _preprocessor.estimateBrightness(faceCrop);
-
-    final quality = evaluateQuality(
-      face: face,
-      imageWidth: width,
-      imageHeight: height,
-      sharpness: sharpness,
-      brightness: brightness,
-    );
-
-    if (!quality.isAcceptable) {
-      throw StateError(quality.message);
-    }
-
-    if (requireLiveness && livenessSession != null && !livenessSession.isComplete) {
-      throw StateError('Complete liveness checks first');
-    }
-
-    final tensor = await _preprocessor.preprocessFaceFromBytes(
-      imageBytes: bytes,
-      face: face,
-      imageWidth: width,
-      imageHeight: height,
-      rotation: rotation,
-    );
-
-    final embedding = await _facenet.runInference(tensor);
-
-    return FaceEmbeddingResult(
-      embedding: embedding,
-      qualityScore: quality.score,
-      livenessPassed: livenessSession?.isComplete ?? !requireLiveness,
-    );
   }
 
   Future<void> processLivenessFrame(InputImage image, LivenessSession session) async {
-    final faces = await _liveness.detect(image);
-    if (faces.isEmpty) return;
+    try {
+      final faces = await _liveness.detect(image);
+      if (faces.isEmpty) return;
 
-    final face = faces.first;
-    final meta = image.metadata;
-    final w = meta?.size.width ?? 720;
-    final h = meta?.size.height ?? 1280;
-    final area = face.boundingBox.width * face.boundingBox.height;
-    final ratio = area / (w * h);
-    var q = 0.65;
-    if (ratio >= AppConfig.minFaceSizeRatio && ratio <= AppConfig.maxFaceSizeRatio) {
-      q = 0.88;
-    } else if (ratio >= AppConfig.minFaceSizeRatio * 0.7) {
-      q = 0.72;
+      final face = faces.first;
+      final meta = image.metadata;
+      final w = meta?.size.width ?? 720;
+      final h = meta?.size.height ?? 1280;
+      final area = face.boundingBox.width * face.boundingBox.height;
+      final ratio = area / (w * h);
+      var q = 0.65;
+      if (ratio >= AppConfig.minFaceSizeRatio && ratio <= AppConfig.maxFaceSizeRatio) {
+        q = 0.88;
+      } else if (ratio >= AppConfig.minFaceSizeRatio * 0.7) {
+        q = 0.72;
+      }
+      session.update(face, qualityScore: q);
+      debugPrint(
+          'Liveness Step=${session.step} '
+              'Complete=${session.isComplete} '
+              'Quality=$q'
+      );
+    } catch (e) {
+      debugPrint('Error processing liveness frame: $e');
+      // Don't throw - liveness frames can fail occasionally
     }
-    session.update(face, qualityScore: q);
   }
 
   void dispose() => _captureDetector.close();

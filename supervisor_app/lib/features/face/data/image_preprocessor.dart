@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 import 'package:supervisor_app/core/config/app_config.dart';
 
 /// Crops, resizes, and normalizes face regions for FaceNet input.
@@ -77,6 +79,17 @@ class ImagePreprocessor {
     width = math.min(source.width - left, width + pad * 2);
     height = math.min(source.height - top, height + pad * 2);
 
+    // Debug logging for crop coordinates
+    debugPrint('=== CROP COORDINATES DEBUG ===');
+    debugPrint('Source Image: ${source.width}x${source.height}');
+    debugPrint('Frame Dimensions: ${frameWidth}x${frameHeight}');
+    debugPrint('Scale X: $scaleX, Scale Y: $scaleY');
+    debugPrint('ML Kit Bounding Box: left=${box.left}, top=${box.top}, width=${box.width}, height=${box.height}');
+    debugPrint('Scaled Crop (before padding): left=$left, top=$top, width=$width, height=$height');
+    debugPrint('Padding: $pad');
+    debugPrint('Final Crop: left=$left, top=$top, width=$width, height=$height');
+    debugPrint('=============================');
+
     return img.copyCrop(source, x: left, y: top, width: width, height: height);
   }
 
@@ -143,5 +156,29 @@ class ImagePreprocessor {
       }
     }
     return total / pixels;
+  }
+
+  /// Saves cropped face image to device storage for inspection/debugging.
+  Future<String?> saveCroppedFaceImage(img.Image faceCrop, {String? suffix}) async {
+    try {
+      final directory = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'face_crop_${timestamp}${suffix ?? ''}.png';
+      final filePath = '${directory.path}/$fileName';
+      
+      final file = File(filePath);
+      await file.writeAsBytes(img.encodePng(faceCrop));
+      
+      debugPrint('=== CROPPED FACE IMAGE SAVED ===');
+      debugPrint('File Path: $filePath');
+      debugPrint('Dimensions: ${faceCrop.width}x${faceCrop.height}');
+      debugPrint('File Size: ${await file.length()} bytes');
+      debugPrint('================================');
+      
+      return filePath;
+    } catch (e) {
+      debugPrint('Error saving cropped face image: $e');
+      return null;
+    }
   }
 }

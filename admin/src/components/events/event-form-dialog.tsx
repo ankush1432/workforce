@@ -109,11 +109,27 @@ export function EventFormDialog({ open, event, onClose }: EventFormDialogProps) 
             value={form.end_date}
             onChange={(e) => setForm({ ...form, end_date: e.target.value })}
           />
-          <Input
-            placeholder="Banner image URL"
-            value={form.banner_image}
-            onChange={(e) => setForm({ ...form, banner_image: e.target.value })}
-          />
+          <div>
+            <label className="block text-sm text-slate-600 mb-1">Banner image URL</label>
+            <Input
+              placeholder="Banner image URL"
+              value={form.banner_image}
+              onChange={(e) => setForm({ ...form, banner_image: e.target.value })}
+            />
+          </div>
+          {form.banner_image && (
+            <div className="mt-2">
+              <label className="block text-sm text-slate-600 mb-1">Preview</label>
+              <img
+                src={form.banner_image}
+                alt="Banner preview"
+                className="w-full h-40 object-cover rounded"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+          )}
           <select
             className="w-full rounded-md border border-slate-300 p-2 text-sm"
             value={form.status}

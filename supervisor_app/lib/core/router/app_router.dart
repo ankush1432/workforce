@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supervisor_app/core/localization/language_selection_page.dart';
 import 'package:supervisor_app/features/attendance/presentation/attendance_history_page.dart';
 import 'package:supervisor_app/features/attendance/presentation/face_verification_page.dart';
 import 'package:supervisor_app/features/auth/presentation/login_page.dart';
 import 'package:supervisor_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:supervisor_app/features/dashboard/presentation/dashboard_page.dart';
+import 'package:supervisor_app/features/employees/domain/employee_model.dart';
 import 'package:supervisor_app/features/employees/presentation/employee_detail_page.dart';
 import 'package:supervisor_app/features/employees/presentation/employees_list_page.dart';
 import 'package:supervisor_app/features/events/presentation/event_detail_page.dart';
@@ -39,7 +40,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/employees', builder: (_, __) => const EmployeesListPage()),
           GoRoute(
             path: '/employees/:id',
-            builder: (_, state) => EmployeeDetailPage(id: int.parse(state.pathParameters['id']!)),
+            builder: (_, state) {
+              final employee = state.extra as EmployeeModel?;
+              return EmployeeDetailPage(
+                id: int.parse(state.pathParameters['id']!),
+                employee: employee,
+              );
+            },
           ),
           GoRoute(
             path: '/employees/:id/register-face',
@@ -55,6 +62,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               action: state.uri.queryParameters['action'] ?? 'check_in',
             ),
           ),
+          GoRoute(
+            path: '/face-scan',
+            builder: (_, state) => FaceVerificationPage(
+              employeeId: null,
+              action: state.uri.queryParameters['action'] ?? 'check_in',
+            ),
+          ),
           GoRoute(path: '/events', builder: (_, __) => const EventsListPage()),
           GoRoute(
             path: '/events/:id',
@@ -65,9 +79,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/notifications', builder: (_, __) => const NotificationsPage()),
           GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
           GoRoute(path: '/settings', builder: (_, __) => const SettingsPage()),
-          GoRoute(path: '/check-in', redirect: (_, __) => '/employees'),
-          GoRoute(path: '/check-out', redirect: (_, __) => '/employees'),
-          GoRoute(path: '/face-scan', redirect: (_, __) => '/employees'),
+          GoRoute(path: '/language', builder: (_, __) => const LanguageSelectionPage()),
         ],
       ),
     ],

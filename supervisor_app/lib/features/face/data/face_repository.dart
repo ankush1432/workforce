@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supervisor_app/core/error/app_exception.dart';
+import 'package:supervisor_app/core/error/error_handler.dart';
 import 'package:supervisor_app/core/network/dio_client.dart';
 import 'package:supervisor_app/features/employees/data/employee_repository.dart';
 import 'package:supervisor_app/features/face/domain/face_registration_result.dart';
@@ -18,33 +21,71 @@ class FaceRepository {
   final EmployeeRepository _employees;
 
   Future<FaceRegistrationResult> getFaceStatus(int employeeId) async {
-    final response = await _dio.get('/supervisor/employees/$employeeId/face/status');
-    final data = Map<String, dynamic>.from(response.data['data'] as Map);
-    final result = FaceRegistrationResult.fromJson(data);
-    if (result.employee != null) {
-      await _employees.updateEmployeeInCache(result.employee!);
+    try {
+      final response = await _dio.get('/supervisor/employees/$employeeId/face/status');
+      final data = response.data;
+      if (data == null) {
+        throw ServerException('No response data from server');
+      }
+      final dataMap = data['data'];
+      if (dataMap == null) {
+        throw ServerException('No face status data in response');
+      }
+      final result = FaceRegistrationResult.fromJson(Map<String, dynamic>.from(dataMap as Map));
+      if (result.employee != null) {
+        await _employees.updateEmployeeInCache(result.employee!);
+      }
+      return result;
+    } on DioException catch (e) {
+      debugPrint('Error getting face status: $e');
+      throw ErrorHandler.handleError(e);
     }
-    return result;
   }
 
   Future<FaceRegistrationResult> registerFace({
     required int employeeId,
     required List<double> embedding,
     required double qualityScore,
+    String? faceImage,
   }) async {
-    final response = await _dio.post(
-      '/supervisor/employees/$employeeId/face/register',
-      data: {
-        'embedding': embedding,
-        'quality_score': qualityScore,
-      },
-    );
+    try {
+      final response = await _dio.post(
+        '/supervisor/employees/$employeeId/face/register',
+        data: {
+          'embedding': embedding,
+          'quality_score': qualityScore,
+          if (faceImage != null) 'face_image': faceImage,
+        },
+      );
 
-    final data = Map<String, dynamic>.from(response.data['data'] as Map);
-    final result = FaceRegistrationResult.fromJson(data);
-    if (result.employee != null) {
-      await _employees.updateEmployeeInCache(result.employee!);
+      final data = response.data;
+      if (data == null) {
+        throw ServerException('No response data from server');
+      }
+
+      // Check if the response indicates an error (duplicate face)
+      if (data['success'] == false) {
+        final message = data['message']?.toString() ?? 'Face registration failed';
+        throw ValidationException(message);
+      }
+
+      final dataMap = data['data'];
+      if (dataMap == null) {
+        throw ServerException('No registration data in response');
+      }
+      final result = FaceRegistrationResult.fromJson(Map<String, dynamic>.from(dataMap as Map));
+      if (result.employee != null) {
+        await _employees.updateEmployeeInCache(result.employee!);
+      }
+      return result;
+    } on DioException catch (e) {
+      debugPrint('Error registering face: $e');
+      throw ErrorHandler.handleError(e);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      debugPrint('Unexpected error registering face: $e');
+      throw ApiException('Face registration failed: $e');
     }
-    return result;
   }
 }

@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -42,6 +41,11 @@ class FacenetService {
       _readTensorShapes();
     } on PlatformException catch (e) {
       debugPrint('FacenetService: model load failed ($_assetPath): $e');
+      _loading = false;
+      rethrow;
+    } catch (e) {
+      debugPrint('FacenetService: unexpected error loading model: $e');
+      _loading = false;
       rethrow;
     } finally {
       _loading = false;
@@ -77,15 +81,20 @@ class FacenetService {
       throw ArgumentError('Expected $expected input values, got ${input.length}');
     }
 
-    final input4d = _reshapeInput(input);
-    final output = List.generate(
-      1,
-      (_) => List<double>.filled(_outputSize, 0),
-    );
+    try {
+      final input4d = _reshapeInput(input);
+      final output = List.generate(
+        1,
+        (_) => List<double>.filled(_outputSize, 0),
+      );
 
-    interpreter.run(input4d, output);
+      interpreter.run(input4d, output);
 
-    return _normalizeEmbedding(List<double>.from(output[0]));
+      return _normalizeEmbedding(List<double>.from(output[0]));
+    } catch (e) {
+      debugPrint('FacenetService: inference error: $e');
+      rethrow;
+    }
   }
 
   List<List<List<List<double>>>> _reshapeInput(Float32List flat) {
@@ -124,11 +133,28 @@ class FacenetService {
     if (sumSq == 0) return vector;
 
     final norm = math.sqrt(sumSq);
-    return vector.map((v) => v / norm).toList();
+    final normalized = vector.map((v) => v / norm).toList();
+
+    // Debug logging for embedding normalization
+    debugPrint('=== EMBEDDING NORMALIZATION DEBUG ===');
+    debugPrint('Raw Embedding Length: ${raw.length}');
+    debugPrint('Target Embedding Length: $target');
+    debugPrint('Sum of Squares (before norm): $sumSq');
+    debugPrint('Norm: $norm');
+    debugPrint('First 5 values (normalized): ${normalized.take(5).toList()}');
+    debugPrint('Last 5 values (normalized): ${normalized.skip(normalized.length - 5).toList()}');
+    debugPrint('=================================');
+
+    return normalized;
   }
 
   void dispose() {
-    _interpreter?.close();
-    _interpreter = null;
+    try {
+      _interpreter?.close();
+    } catch (e) {
+      debugPrint('FacenetService: error closing interpreter: $e');
+    } finally {
+      _interpreter = null;
+    }
   }
 }

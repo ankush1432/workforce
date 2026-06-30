@@ -14,15 +14,15 @@ class LivenessOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final complete = session.isComplete;
+    final faceVerified = session.step == LivenessStep.faceVerified;
 
     return IgnorePointer(
       child: LayoutBuilder(
         builder: (context, constraints) {
           final size = Size(constraints.maxWidth, constraints.maxHeight);
           final center = Offset(size.width / 2, size.height * 0.4);
-          final ovalW = size.width * 0.68;
-          final ovalH = size.height * 0.54;
-          final faceRect = Rect.fromCenter(center: center, width: ovalW, height: ovalH);
+          final circleSize = size.width * 0.68;
+          final faceRect = Rect.fromCenter(center: center, width: circleSize, height: circleSize);
 
           return Stack(
             fit: StackFit.expand,
@@ -32,7 +32,7 @@ class LivenessOverlay extends StatelessWidget {
                 size: size,
               ),
               CustomPaint(
-                painter: _FaceOvalPainter(
+                painter: _FaceCirclePainter(
                   faceRect: faceRect,
                   color: complete ? Colors.greenAccent : colorScheme.primary,
                   complete: complete,
@@ -60,18 +60,42 @@ class LivenessOverlay extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
+                        color: Colors.black.withValues(alpha:0.65),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Text(
-                        session.instruction,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
+                      child: faceVerified
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  session.instruction,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              session.instruction,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -105,8 +129,8 @@ class _FaceMaskPainter extends CustomPainter {
       oldDelegate.faceRect != faceRect;
 }
 
-class _FaceOvalPainter extends CustomPainter {
-  _FaceOvalPainter({
+class _FaceCirclePainter extends CustomPainter {
+  _FaceCirclePainter({
     required this.faceRect,
     required this.color,
     required this.complete,
@@ -136,7 +160,7 @@ class _FaceOvalPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _FaceOvalPainter oldDelegate) =>
+  bool shouldRepaint(covariant _FaceCirclePainter oldDelegate) =>
       oldDelegate.faceRect != faceRect ||
       oldDelegate.color != color ||
       oldDelegate.complete != complete;

@@ -17,6 +17,7 @@ class EventResource extends JsonResource
             'start_date' => $this->start_date?->toIso8601String(),
             'end_date' => $this->end_date?->toIso8601String(),
             'banner_image' => $this->banner_image,
+            'banner_image_url' => $this->banner_image ? asset('storage/' . $this->banner_image) : null,
             'status' => $this->status,
             'created_by' => $this->created_by,
             'created_at' => $this->created_at?->toIso8601String(),

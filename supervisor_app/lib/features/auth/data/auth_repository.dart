@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supervisor_app/core/error/error_handler.dart';
 import 'package:supervisor_app/core/network/dio_client.dart';
 import 'package:supervisor_app/features/auth/data/auth_local_datasource.dart';
 import 'package:supervisor_app/features/auth/domain/auth_state.dart';
@@ -15,24 +17,45 @@ class AuthRepository {
   final AuthLocalDataSource _local;
 
   Future<AuthState> login(String email, String password) async {
-    final response = await _dio.post('/auth/supervisor/login', data: {
-      'email': email,
-      'password': password,
-    });
+    try {
+      final response = await _dio.post('/auth/supervisor/login', data: {
+        'email': email,
+        'password': password,
+      });
 
-    final token = response.data['token'] as String;
-    final supervisor = Map<String, dynamic>.from(response.data['supervisor'] as Map);
+      final data = response.data;
+      if (data == null) {
+        throw Exception('No response data from server');
+      }
 
-    await _local.saveToken(token);
-    await _local.saveProfile(supervisor);
+      final token = data['token'] as String?;
+      if (token == null) {
+        throw Exception('No token in response');
+      }
 
-    return AuthState(isAuthenticated: true, supervisor: supervisor);
+      final supervisorData = data['supervisor'];
+      if (supervisorData == null || supervisorData is! Map) {
+        throw Exception('Invalid supervisor data in response');
+      }
+      final supervisor = Map<String, dynamic>.from(supervisorData);
+
+      await _local.saveToken(token);
+      await _local.saveProfile(supervisor);
+
+      return AuthState(isAuthenticated: true, supervisor: supervisor);
+    } on DioException catch (e) {
+      debugPrint('Login error: $e');
+      throw ErrorHandler.handleError(e);
+    }
   }
 
   Future<void> logout() async {
     try {
       await _dio.post('/supervisor/auth/logout');
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Logout API error: $e');
+      // Continue with local cleanup even if API call fails
+    }
     await _local.clear();
   }
 

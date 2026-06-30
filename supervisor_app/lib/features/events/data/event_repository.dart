@@ -17,6 +17,7 @@ class EventRepository {
     try {
       final response = await _dio.get('/supervisor/events', queryParameters: {
         'per_page': 50,
+        'status': 'published',
       });
 
       final list = _parseList(response.data);

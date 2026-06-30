@@ -13,9 +13,9 @@ class Employee extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'company_id', 'site_id', 'employee_code', 'first_name', 'last_name',
-        'email', 'phone', 'department', 'designation', 'date_of_joining',
-        'face_registered', 'is_active',
+        'company_id', 'site_id', 'department_id', 'designation_id', 'shift_id', 'supervisor_id',
+        'employee_code', 'first_name', 'last_name', 'email', 'phone',
+        'department', 'designation', 'date_of_joining', 'face_registered', 'is_active',
     ];
 
     protected function casts(): array
@@ -35,6 +35,26 @@ class Employee extends Model
     public function site(): BelongsTo
     {
         return $this->belongsTo(Site::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function designation(): BelongsTo
+    {
+        return $this->belongsTo(Designation::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(Supervisor::class);
     }
 
     public function faceEmbeddings(): HasMany

@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { useDefaultCompany } from "@/lib/hooks/use-default-company";
 import { selectClassName } from "@/lib/form-styles";
-import type { Employee, Site } from "@/lib/api/types";
+import type { Employee, Site, Department, Designation, Shift, Supervisor } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -17,13 +17,15 @@ interface EmployeeFormDialogProps {
 
 const empty = {
   site_id: "",
+  supervisor_id: "",
+  department_id: "",
+  designation_id: "",
+  shift_id: "",
   employee_code: "",
   first_name: "",
   last_name: "",
   email: "",
   phone: "",
-  department: "",
-  designation: "",
   is_active: true,
 };
 
@@ -38,18 +40,44 @@ export function EmployeeFormDialog({ open, employee, onClose }: EmployeeFormDial
     enabled: open,
   });
 
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: async () => (await apiClient.get("/departments")).data.data as Department[],
+    enabled: open,
+  });
+
+  const { data: designations = [] } = useQuery({
+    queryKey: ["designations"],
+    queryFn: async () => (await apiClient.get("/designations")).data.data as Designation[],
+    enabled: open,
+  });
+
+  const { data: shifts = [] } = useQuery({
+    queryKey: ["shifts"],
+    queryFn: async () => (await apiClient.get("/shifts")).data.data as Shift[],
+    enabled: open,
+  });
+
+  const { data: supervisors = [] } = useQuery({
+    queryKey: ["supervisors"],
+    queryFn: async () => (await apiClient.get("/supervisors")).data.data as Supervisor[],
+    enabled: open,
+  });
+
   useEffect(() => {
     if (!open) return;
     if (employee) {
       setForm({
         site_id: String(employee.site_id),
+        supervisor_id: employee.supervisor_id ? String(employee.supervisor_id) : "",
+        department_id: employee.department_id ? String(employee.department_id) : "",
+        designation_id: employee.designation_id ? String(employee.designation_id) : "",
+        shift_id: employee.shift_id ? String(employee.shift_id) : "",
         employee_code: employee.employee_code,
         first_name: employee.first_name,
         last_name: employee.last_name,
         email: employee.email ?? "",
         phone: employee.phone ?? "",
-        department: employee.department ?? "",
-        designation: employee.designation ?? "",
         is_active: employee.is_active,
       });
     } else {
@@ -63,13 +91,15 @@ export function EmployeeFormDialog({ open, employee, onClose }: EmployeeFormDial
       const payload = {
         company_id: company.id,
         site_id: Number(form.site_id),
+        supervisor_id: Number(form.supervisor_id),
+        department_id: form.department_id ? Number(form.department_id) : null,
+        designation_id: form.designation_id ? Number(form.designation_id) : null,
+        shift_id: form.shift_id ? Number(form.shift_id) : null,
         employee_code: form.employee_code,
         first_name: form.first_name,
         last_name: form.last_name,
         email: form.email || null,
         phone: form.phone || null,
-        department: form.department || null,
-        designation: form.designation || null,
         is_active: form.is_active,
       };
       if (employee) {
@@ -116,6 +146,22 @@ export function EmployeeFormDialog({ open, employee, onClose }: EmployeeFormDial
             </select>
           </div>
           <div>
+            <label className="form-label">Supervisor</label>
+            <select
+              className={selectClassName}
+              value={form.supervisor_id}
+              onChange={(e) => setForm({ ...form, supervisor_id: e.target.value })}
+              required
+            >
+              <option value="">Select supervisor</option>
+              {supervisors.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.first_name} {s.last_name} ({s.employee_code})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="form-label">Employee code</label>
             <Input
               value={form.employee_code}
@@ -156,20 +202,51 @@ export function EmployeeFormDialog({ open, employee, onClose }: EmployeeFormDial
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="form-label">Department</label>
-              <Input
-                value={form.department}
-                onChange={(e) => setForm({ ...form, department: e.target.value })}
-              />
+              <select
+                className={selectClassName}
+                value={form.department_id}
+                onChange={(e) => setForm({ ...form, department_id: e.target.value })}
+              >
+                <option value="">Select department</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="form-label">Designation</label>
-              <Input
-                value={form.designation}
-                onChange={(e) => setForm({ ...form, designation: e.target.value })}
-              />
+              <select
+                className={selectClassName}
+                value={form.designation_id}
+                onChange={(e) => setForm({ ...form, designation_id: e.target.value })}
+              >
+                <option value="">Select designation</option>
+                {designations.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Shift</label>
+              <select
+                className={selectClassName}
+                value={form.shift_id}
+                onChange={(e) => setForm({ ...form, shift_id: e.target.value })}
+              >
+                <option value="">Select shift</option>
+                {shifts.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-700">

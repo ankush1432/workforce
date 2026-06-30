@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supervisor_app/l10n/app_localizations.dart';
 import 'package:supervisor_app/shared/widgets/empty_state.dart';
 
-class WageSummaryPage extends StatelessWidget {
+class WageSummaryPage extends ConsumerWidget {
   const WageSummaryPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Wage Summary')),
-      body: const EmptyState(message: 'Monthly wage summaries appear here'),
+      appBar: AppBar(title: Text(l10n.wageSummary)),
+      body: EmptyState(message: l10n.monthlyWageSummariesAppearHere),
     );
   }
 }

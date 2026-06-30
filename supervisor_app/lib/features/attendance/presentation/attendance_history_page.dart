@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supervisor_app/features/attendance/domain/attendance_model.dart';
 import 'package:supervisor_app/features/attendance/presentation/attendance_providers.dart';
+import 'package:supervisor_app/l10n/app_localizations.dart';
 import 'package:supervisor_app/shared/widgets/empty_state.dart';
 import 'package:supervisor_app/shared/widgets/loading_view.dart';
 
@@ -11,12 +12,13 @@ class AttendanceHistoryPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final history = ref.watch(attendanceHistoryProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Attendance History'),
+        title: Text(l10n.attendanceHistory),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -33,7 +35,7 @@ class AttendanceHistoryPage extends ConsumerWidget {
             children: [
               SizedBox(
                 height: MediaQuery.sizeOf(context).height * 0.4,
-                child: Center(child: Text('Error: $e')),
+                child: Center(child: Text('${l10n.error}: $e')),
               ),
             ],
           ),
@@ -41,7 +43,7 @@ class AttendanceHistoryPage extends ConsumerWidget {
             if (list.isEmpty) {
               return  ListView(
                 physics: AlwaysScrollableScrollPhysics(),
-                children: [EmptyState(message: 'No attendance records yet')],
+                children: [EmptyState(message: l10n.noAttendanceRecordsYet)],
               );
             }
 
@@ -97,6 +99,7 @@ class _AttendanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Card(
@@ -121,14 +124,14 @@ class _AttendanceCard extends StatelessWidget {
             ),
             if (record.shiftName != null) ...[
               const SizedBox(height: 4),
-              Text('Shift: ${record.shiftName}', style: theme.textTheme.bodySmall),
+              Text('${l10n.shift}: ${record.shiftName}', style: theme.textTheme.bodySmall),
             ],
             const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
                   child: _TimeTile(
-                    label: 'Check In',
+                    label: l10n.checkIn,
                     time: record.checkInAt,
                     icon: Icons.login_rounded,
                   ),
@@ -136,7 +139,7 @@ class _AttendanceCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _TimeTile(
-                    label: 'Check Out',
+                    label: l10n.checkOut,
                     time: record.checkOutAt,
                     icon: Icons.logout_rounded,
                   ),

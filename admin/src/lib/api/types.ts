@@ -30,10 +30,33 @@ export interface Site {
   is_active: boolean;
 }
 
+export interface Department {
+  id: number;
+  company_id: number;
+  name: string;
+  code: string;
+  description?: string | null;
+  is_active: boolean;
+}
+
+export interface Designation {
+  id: number;
+  company_id: number;
+  department_id?: number | null;
+  title: string;
+  code: string;
+  description?: string | null;
+  is_active: boolean;
+}
+
 export interface Employee {
   id: number;
   company_id: number;
   site_id: number;
+  supervisor_id?: number | null;
+  department_id?: number | null;
+  designation_id?: number | null;
+  shift_id?: number | null;
   employee_code: string;
   first_name: string;
   last_name: string;
@@ -44,6 +67,10 @@ export interface Employee {
   designation?: string;
   face_registered: boolean;
   is_active: boolean;
+  supervisor?: Supervisor | null;
+  department_relation?: Department | null;
+  designation_relation?: Designation | null;
+  shift?: Shift | null;
 }
 
 export interface Supervisor {
@@ -78,6 +105,7 @@ export interface Event {
   start_date: string;
   end_date: string;
   banner_image?: string | null;
+  banner_image_url?: string | null;
   status: "draft" | "published" | "unpublished";
   created_by?: number | null;
   created_at?: string;

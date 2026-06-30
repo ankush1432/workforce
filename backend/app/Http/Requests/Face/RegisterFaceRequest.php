@@ -17,6 +17,7 @@ class RegisterFaceRequest extends FormRequest
             'embedding' => ['required', 'array', 'min:128'],
             'embedding.*' => ['numeric'],
             'quality_score' => ['nullable', 'numeric', 'between:0,1'],
+            'face_image' => ['nullable', 'string'],
         ];
     }
 }

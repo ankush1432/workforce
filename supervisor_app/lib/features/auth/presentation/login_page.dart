@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supervisor_app/core/config/app_config.dart';
 import 'package:supervisor_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:supervisor_app/shared/widgets/glass_card.dart';
+import 'package:supervisor_app/l10n/app_localizations.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -24,6 +25,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authStateProvider);
     final loading = auth.isLoading;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: Container(
@@ -41,28 +43,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.face_retouching_natural, size: 56, color: Theme.of(context).colorScheme.primary)
+                  Image.asset("assets/images/app_logo.png",width:  96,height: 96,)
                       .animate()
                       .fadeIn()
                       .scale(),
                   const SizedBox(height: 16),
-                  Text('Supervisor Login', style: Theme.of(context).textTheme.headlineSmall),
+                  Text(l10n.supervisorLogin, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 24),
                   TextField(
                     controller: _email,
-                    decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: l10n.email, border: const OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _password,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: l10n.password, border: const OutlineInputBorder()),
                   ),
                   if (auth.hasError)
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: Text(
-                        _friendlyAuthError(auth.error),
+                        _friendlyAuthError(auth.error, l10n),
                         style: const TextStyle(color: Colors.redAccent),
                       ),
                     ),
@@ -73,7 +75,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       onPressed: loading ? null : _submit,
                       child: loading
                           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Text('Sign In'),
+                          : Text(l10n.signIn),
                     ),
                   ),
                 ],
@@ -85,11 +87,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  String _friendlyAuthError(Object? error) {
+  String _friendlyAuthError(Object? error, AppLocalizations l10n) {
     final text = error.toString();
     if (text.contains('SocketException') || text.contains('Connection refused')) {
-      return 'Cannot reach API at ${AppConfig.apiBaseUrl}. '
-          'Ensure Laravel runs on your PC: php artisan serve --host=0.0.0.0 --port=8000';
+      return l10n.cannotReachApi(AppConfig.apiBaseUrl);
     }
     return text;
   }

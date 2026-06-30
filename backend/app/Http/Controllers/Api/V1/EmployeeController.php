@@ -16,7 +16,15 @@ class EmployeeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['search', 'company_id', 'site_id', 'face_registered', 'is_active']);
+        $filters = $request->only(['search', 'company_id', 'site_id', 'supervisor_id', 'face_registered', 'is_active']);
+
+        // If request is from supervisor, filter by their supervisor_id
+        $auth = auth('supervisor');
+        if ($auth->check()) {
+            $supervisor = $auth->user();
+            $filters['supervisor_id'] = $supervisor->supervisor_id ?? $supervisor->id;
+        }
+
         $items = $this->repository->paginate($filters, (int) $request->get('per_page', 15));
 
         return EmployeeResource::collection($items)->response();

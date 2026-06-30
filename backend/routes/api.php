@@ -4,7 +4,10 @@ use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\DepartmentController;
+use App\Http\Controllers\Api\V1\DesignationController;
 use App\Http\Controllers\Api\V1\EmployeeController;
+use App\Http\Controllers\Api\V1\EmployeeFaceEmbeddingController;
 use App\Http\Controllers\Api\V1\EventController;
 use App\Http\Controllers\Api\V1\FaceRegistrationController;
 use App\Http\Controllers\Api\V1\OfflineSyncController;
@@ -26,7 +29,10 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('companies', CompanyController::class);
         Route::apiResource('sites', SiteController::class);
         Route::apiResource('supervisors', SupervisorController::class);
+        Route::apiResource('departments', DepartmentController::class);
+        Route::apiResource('designations', DesignationController::class);
         Route::apiResource('employees', EmployeeController::class);
+        Route::apiResource('face-embeddings', EmployeeFaceEmbeddingController::class)->only(['index', 'show']);
         Route::apiResource('shifts', ShiftController::class);
         Route::apiResource('wages', WageController::class);
         Route::get('attendance', [AttendanceController::class, 'index']);
@@ -45,9 +51,12 @@ Route::prefix('v1')->group(function () {
         Route::get('employees/{employeeId}/face/status', [FaceRegistrationController::class, 'status']);
         Route::post('employees/{employeeId}/face/register', [FaceRegistrationController::class, 'register']);
         Route::post('employees/{employeeId}/face/verify', [FaceRegistrationController::class, 'verify']);
+        Route::post('face/match', [FaceRegistrationController::class, 'matchFace']);
 
         Route::post('attendance/check-in', [AttendanceController::class, 'checkIn']);
         Route::post('attendance/check-out', [AttendanceController::class, 'checkOut']);
+        Route::post('attendance/check-in-by-face', [AttendanceController::class, 'checkInByFace']);
+        Route::post('attendance/check-out-by-face', [AttendanceController::class, 'checkOutByFace']);
         Route::get('attendance', [AttendanceController::class, 'index']);
         Route::get('employees/{employeeId}/attendance/today', [AttendanceController::class, 'todayForEmployee']);
 

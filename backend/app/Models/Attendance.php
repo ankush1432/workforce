@@ -15,6 +15,7 @@ class Attendance extends Model
         'check_in_at', 'check_out_at', 'check_in_latitude', 'check_in_longitude',
         'check_out_latitude', 'check_out_longitude', 'check_in_confidence', 'check_out_confidence',
         'check_in_device_id', 'check_out_device_id', 'status', 'worked_minutes',
+        'checkin_face_image', 'checkout_face_image',
     ];
 
     protected function casts(): array

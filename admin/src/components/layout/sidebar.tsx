@@ -17,6 +17,8 @@ import {
   LayoutDashboard,
   LogOut,
   Building2,
+  Briefcase,
+  Badge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
@@ -25,6 +27,8 @@ import { apiClient } from "@/lib/api/client";
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/sites", label: "Locations", icon: MapPin },
+  { href: "/departments", label: "Departments", icon: Briefcase },
+  { href: "/designations", label: "Designations", icon: Badge },
   { href: "/supervisors", label: "Supervisors", icon: UserCog },
   { href: "/employees", label: "Employees", icon: Users },
   { href: "/events", label: "Events", icon: CalendarDays },

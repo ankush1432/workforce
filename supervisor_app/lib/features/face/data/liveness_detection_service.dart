@@ -34,6 +34,7 @@ enum LivenessStep {
   blink,
   holdStill,
   completed,
+  faceVerified,
 }
 
 class LivenessSession {
@@ -42,16 +43,22 @@ class LivenessSession {
   int _stableFrames = 0;
   int _blinkFrames = 0;
   int _alignedFrames = 0;
+  
+  // Face locking: store the verified face image when liveness completes
+  String? _lockedFaceImagePath;
+  List<double>? _lockedFaceEmbedding;
+  double? _lockedFaceQuality;
 
   static const int requiredStableFrames = 5;
   static const int requiredBlinkFrames = 1;
   static const int requiredAlignedFrames = 3;
 
   String get instruction => switch (step) {
-        LivenessStep.alignFace => 'Center your face in the oval',
+        LivenessStep.alignFace => 'Center your face in the circle',
         LivenessStep.blink => 'Blink slowly once',
         LivenessStep.holdStill => 'Hold still…',
-        LivenessStep.completed => 'Ready — tap Scan Face',
+        LivenessStep.completed => 'Face Verified',
+        LivenessStep.faceVerified => 'Processing Attendance...',
       };
 
   double get progress => switch (step) {
@@ -59,12 +66,19 @@ class LivenessSession {
         LivenessStep.blink => 0.5,
         LivenessStep.holdStill => 0.8,
         LivenessStep.completed => 1.0,
+        LivenessStep.faceVerified => 1.0,
       };
 
-  bool get isComplete => step == LivenessStep.completed;
+  bool get isComplete => step == LivenessStep.completed || step == LivenessStep.faceVerified;
+
+  // Face locking getters
+  bool get hasLockedFace => _lockedFaceImagePath != null;
+  String? get lockedFaceImagePath => _lockedFaceImagePath;
+  List<double>? get lockedFaceEmbedding => _lockedFaceEmbedding;
+  double? get lockedFaceQuality => _lockedFaceQuality;
 
   void update(Face face, {required double qualityScore}) {
-    if (step == LivenessStep.completed) return;
+    if (step == LivenessStep.completed || step == LivenessStep.faceVerified) return;
 
     if (!_isFaceAligned(face)) {
       _stableFrames = 0;
@@ -139,5 +153,24 @@ class LivenessSession {
     _stableFrames = 0;
     _blinkFrames = 0;
     _alignedFrames = 0;
+    // Clear locked face data on reset
+    _lockedFaceImagePath = null;
+    _lockedFaceEmbedding = null;
+    _lockedFaceQuality = null;
+  }
+
+  void markFaceVerified() {
+    step = LivenessStep.faceVerified;
+  }
+
+  /// Lock the verified face data to avoid unnecessary second face detection
+  void lockFace({
+    required String imagePath,
+    required List<double> embedding,
+    required double quality,
+  }) {
+    _lockedFaceImagePath = imagePath;
+    _lockedFaceEmbedding = embedding;
+    _lockedFaceQuality = quality;
   }
 }

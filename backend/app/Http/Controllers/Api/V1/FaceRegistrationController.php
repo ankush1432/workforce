@@ -34,34 +34,64 @@ class FaceRegistrationController extends Controller
 
     public function register(RegisterFaceRequest $request, int $employeeId): JsonResponse
     {
-        $supervisorId = auth('supervisor')->id();
+        try {
+            $supervisorId = auth('supervisor')->id();
 
-        $embedding = $this->faceService->register(
-            $employeeId,
-            $request->validated('embedding'),
-            $supervisorId,
-            $request->validated('quality_score')
-        );
+            $result = $this->faceService->register(
+                $employeeId,
+                $request->validated('embedding'),
+                $supervisorId,
+                $request->validated('quality_score'),
+                $request->validated('face_image')
+            );
 
-        $employee = $this->employeeRepository->find($employeeId);
-        $status = $this->faceService->getStatus($employeeId);
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'type' => $result['type'] ?? 'error',
+                    'message' => $result['message'],
+                    'employee_id' => $result['employee_id'] ?? null,
+                    'employee_name' => $result['employee_name'] ?? null,
+                    'similarity' => $result['similarity'] ?? null,
+                ], 422);
+            }
 
-        return response()->json([
-            'message' => 'Face registered successfully',
-            'data' => [
-                'embedding' => new EmployeeFaceEmbeddingResource($embedding),
-                'registration_status' => $status['registration_status'],
-                'embedding_exists' => $status['embedding_exists'],
-                'face_registered' => $status['face_registered'],
-                'confidence' => $status['confidence'],
-                'employee' => new EmployeeResource($employee->load(['company', 'site'])),
-            ],
-        ], 201);
+            $employee = $this->employeeRepository->find($employeeId);
+            $status = $this->faceService->getStatus($employeeId);
+
+            return response()->json([
+                'success' => true,
+                'type' => 'success',
+                'message' => 'Face registered successfully',
+                'data' => [
+                    'embedding' => new EmployeeFaceEmbeddingResource($result['embedding']),
+                    'registration_status' => $status['registration_status'],
+                    'embedding_exists' => $status['embedding_exists'],
+                    'face_registered' => $status['face_registered'],
+                    'confidence' => $status['confidence'],
+                    'employee' => new EmployeeResource($employee->load(['company', 'site', 'supervisor', 'department', 'designation', 'shift'])),
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function verify(VerifyFaceRequest $request, int $employeeId): JsonResponse
     {
         $result = $this->faceService->verify($employeeId, $request->validated('embedding'));
+
+        return response()->json(['data' => $result]);
+    }
+
+    public function matchFace(VerifyFaceRequest $request): JsonResponse
+    {
+        $embedding = $request->validated('embedding');
+        $result = $this->faceService->matchEmbedding($embedding);
 
         return response()->json(['data' => $result]);
     }

@@ -20,7 +20,11 @@ class EmployeeRepository extends BaseRepository
             $query->where('face_registered', (bool) $filters['face_registered']);
         }
 
-        return $query->with(['company', 'site', 'primaryEmbedding']);
+        if (isset($filters['supervisor_id']) && $filters['supervisor_id'] !== null) {
+            $query->where('supervisor_id', $filters['supervisor_id']);
+        }
+
+        return $query->with(['company', 'site', 'supervisor', 'department', 'designation', 'shift', 'primaryEmbedding']);
     }
 
     protected function applySearch(Builder $query, string $search): void

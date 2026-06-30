@@ -2,7 +2,7 @@ class AppConfig {
   static const appName = 'Face Attendance';
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://wages.aarvedsol.com/api/v1',
+    defaultValue: 'https://testwages.aarvedsol.com/api/v1',
   );
 
   /// Cosine similarity threshold (embeddings are L2-normalized).

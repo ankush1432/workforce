@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supervisor_app/l10n/app_localizations.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.child});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final location = GoRouterState.of(context).uri.path;
 
     int index = 0;
@@ -36,26 +39,26 @@ class MainShell extends StatelessWidget {
                     context.go('/profile');
                 }
               },
-              destinations: const [
+              destinations: [
                 NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
-                  label: 'Home',
+                  icon: const Icon(Icons.home_outlined),
+                  selectedIcon: const Icon(Icons.home_rounded),
+                  label: l10n.home,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.people_outline),
-                  selectedIcon: Icon(Icons.people_rounded),
-                  label: 'Employees',
+                  icon: const Icon(Icons.people_outline),
+                  selectedIcon: const Icon(Icons.people_rounded),
+                  label: l10n.employees,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.event_outlined),
-                  selectedIcon: Icon(Icons.event_rounded),
-                  label: 'Events',
+                  icon: const Icon(Icons.event_outlined),
+                  selectedIcon: const Icon(Icons.event_rounded),
+                  label: l10n.events,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: 'Profile',
+                  icon: const Icon(Icons.person_outline),
+                  selectedIcon: const Icon(Icons.person_rounded),
+                  label: l10n.profile,
                 ),
               ],
             ),

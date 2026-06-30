@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:supervisor_app/features/employees/domain/employee_model.dart';
 import 'package:supervisor_app/shared/widgets/glass_card.dart';
+import 'package:supervisor_app/l10n/app_localizations.dart';
 
 import '../../attendance/presentation/employee_attendance_flow.dart';
 
@@ -13,14 +13,21 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
+      appBar: AppBar(title: Row(
+        children: [
+          Image.asset("assets/images/app_logo.png",width: 35,height: 35,),
+          SizedBox(width: 24,),
+          Text(l10n.home),
+        ],
+      )),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Workforce Attendance',
+            l10n.workforceAttendance,
             style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 20),
@@ -31,22 +38,22 @@ class DashboardPage extends ConsumerWidget {
           const SizedBox(height: 20),
           _QuickTile(
             icon: Icons.people_rounded,
-            title: 'Employees',
-            subtitle: 'View team & record attendance',
+            title: l10n.employees,
+            subtitle: l10n.viewTeamRecordAttendance,
             onTap: () => context.go('/employees'),
           ),
           const SizedBox(height: 10),
           _QuickTile(
             icon: Icons.event_rounded,
-            title: 'Events',
-            subtitle: 'Company announcements & schedules',
+            title: l10n.events,
+            subtitle: l10n.companyAnnouncementsSchedules,
             onTap: () => context.go('/events'),
           ),
           const SizedBox(height: 10),
           _QuickTile(
             icon: Icons.history_rounded,
-            title: 'Attendance History',
-            subtitle: 'Past check-ins and check-outs',
+            title: l10n.attendanceHistory,
+            subtitle: l10n.pastCheckInsCheckOuts,
             onTap: () => context.push('/attendance-history'),
           ),
           const SizedBox(height: 20),
@@ -57,7 +64,7 @@ class DashboardPage extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Face registration and verification happen from each employee\'s profile.',
+                    l10n.faceRegistrationInfo,
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
@@ -107,23 +114,24 @@ class _QuickTile extends StatelessWidget {
 }
 class _CheckInOutButtons extends StatelessWidget {
   final WidgetRef ref;
-  _CheckInOutButtons({required this.ref});
+  const _CheckInOutButtons({required this.ref});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Row(
       children: [
         // Check In
         Expanded(
           child: _AttendanceActionButton(
-            label: 'Check In',
+            label: l10n.checkIn,
             icon: Icons.login_rounded,
             color: const Color(0xFF1D9E75),
             onTap: () {
-              startEmployeeAttendance(
+              startFaceAttendance(
                 context: context,
                 ref: ref,
-                employee: EmployeeModel(id: 1, employeeCode: "employeeCode", firstName: "firstName", lastName: "lastName", faceRegistered: true),
                 action: EmployeeAttendanceAction.checkIn,
               );
             },
@@ -133,17 +141,16 @@ class _CheckInOutButtons extends StatelessWidget {
         // Check Out
         Expanded(
           child: _AttendanceActionButton(
-            label: 'Check Out',
+            label: l10n.checkOut,
             icon: Icons.logout_rounded,
             color: const Color(0xFFD85A30),
-              onTap: () {
-                startEmployeeAttendance(
-                  context: context,
-                  ref: ref,
-                  employee: EmployeeModel(id: 1, employeeCode: "employeeCode", firstName: "firstName", lastName: "lastName", faceRegistered: true),
-                  action: EmployeeAttendanceAction.checkOut,
-                );
-              },
+            onTap: () {
+              startFaceAttendance(
+                context: context,
+                ref: ref,
+                action: EmployeeAttendanceAction.checkOut,
+              );
+            },
           ),
         ),
       ],
@@ -165,6 +172,8 @@ class _AttendanceActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Material(
       color: color,
       borderRadius: BorderRadius.circular(16),
@@ -180,7 +189,7 @@ class _AttendanceActionButton extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: Colors.white, size: 26),
@@ -197,9 +206,9 @@ class _AttendanceActionButton extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                'Scan face to mark',
+                l10n.scanFaceToMark,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.75),
+                  color: Colors.white.withValues(alpha:0.75),
                   fontSize: 11,
                 ),
               ),

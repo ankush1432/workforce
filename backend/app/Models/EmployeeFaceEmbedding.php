@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class EmployeeFaceEmbedding extends Model
 {
     protected $fillable = [
-        'employee_id', 'embedding', 'model_version', 'quality_score',
+        'employee_id', 'embedding', 'face_image_path', 'model_version', 'quality_score',
         'registered_by_supervisor_id', 'registered_at', 'is_primary',
     ];
 

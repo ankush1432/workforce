@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supervisor_app/features/attendance/presentation/attendance_providers.dart';
 import 'package:supervisor_app/features/employees/domain/employee_model.dart';
+import 'package:supervisor_app/l10n/app_localizations.dart';
 
 enum EmployeeAttendanceAction { checkIn, checkOut }
 
@@ -22,12 +23,13 @@ Future<void> startEmployeeAttendance({
   required EmployeeModel employee,
   required EmployeeAttendanceAction action,
 }) async {
+  final l10n = AppLocalizations.of(context)!;
   final today = await ref.read(employeeTodayAttendanceProvider(employee.id).future);
 
   if (action == EmployeeAttendanceAction.checkIn && (today?.hasCheckIn ?? false)) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Already Checked In')),
+        SnackBar(content: Text(l10n.alreadyCheckedIn)),
       );
     }
     return;
@@ -37,7 +39,7 @@ Future<void> startEmployeeAttendance({
     if (!(today?.hasCheckIn ?? false)) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Employee must check in first')),
+          SnackBar(content: Text(l10n.employeeMustCheckInFirst)),
         );
       }
       return;
@@ -45,7 +47,7 @@ Future<void> startEmployeeAttendance({
     if (today?.hasCheckOut ?? false) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Already Checked Out')),
+          SnackBar(content: Text(l10n.alreadyCheckedOut)),
         );
       }
       return;
@@ -62,6 +64,18 @@ Future<void> startEmployeeAttendance({
   }
 
   context.push('/employees/${employee.id}/verify-face?action=${action.routeAction}');
+}
+
+/// Starts check-in/out from home screen — face matching determines employee.
+Future<void> startFaceAttendance({
+  required BuildContext context,
+  required WidgetRef ref,
+  required EmployeeAttendanceAction action,
+}) async {
+  if (!context.mounted) return;
+  
+  // Navigate to face scan page that will match employee and handle attendance
+  context.push('/face-scan?action=${action.routeAction}');
 }
 
 void invalidateEmployeeAttendance(WidgetRef ref, int employeeId) {

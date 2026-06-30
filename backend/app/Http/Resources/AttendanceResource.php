@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class AttendanceResource extends JsonResource
 {
@@ -21,6 +22,8 @@ class AttendanceResource extends JsonResource
             'check_out_confidence' => $this->check_out_confidence,
             'status' => $this->status,
             'worked_minutes' => $this->worked_minutes,
+            'checkin_face_image_url' => $this->checkin_face_image ? Storage::disk('public')->url($this->checkin_face_image) : null,
+            'checkout_face_image_url' => $this->checkout_face_image ? Storage::disk('public')->url($this->checkout_face_image) : null,
             'employee' => new EmployeeResource($this->whenLoaded('employee')),
             'site' => new SiteResource($this->whenLoaded('site')),
             'shift' => new ShiftResource($this->whenLoaded('shift')),

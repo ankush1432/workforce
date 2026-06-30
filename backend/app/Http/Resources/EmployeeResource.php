@@ -26,6 +26,10 @@ class EmployeeResource extends JsonResource
             'id' => $this->id,
             'company_id' => $this->company_id,
             'site_id' => $this->site_id,
+            'supervisor_id' => $this->supervisor_id,
+            'department_id' => $this->department_id,
+            'designation_id' => $this->designation_id,
+            'shift_id' => $this->shift_id,
             'employee_code' => $this->employee_code,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
@@ -43,6 +47,10 @@ class EmployeeResource extends JsonResource
             'is_active' => $this->is_active,
             'company' => new CompanyResource($this->whenLoaded('company')),
             'site' => new SiteResource($this->whenLoaded('site')),
+            'supervisor' => new SupervisorResource($this->whenLoaded('supervisor')),
+            'department_relation' => new DepartmentResource($this->whenLoaded('department')),
+            'designation_relation' => new DesignationResource($this->whenLoaded('designation')),
+            'shift' => new ShiftResource($this->whenLoaded('shift')),
         ];
     }
 }

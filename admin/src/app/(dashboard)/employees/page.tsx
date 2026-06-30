@@ -60,7 +60,26 @@ export default function EmployeesPage() {
             header: "Name",
             render: (r) => r.full_name ?? `${r.first_name} ${r.last_name}`,
           },
-          { key: "department", header: "Department" },
+          {
+            key: "department_relation",
+            header: "Department",
+            render: (r) => r.department_relation?.name ?? r.department ?? "-",
+          },
+          {
+            key: "designation_relation",
+            header: "Designation",
+            render: (r) => r.designation_relation?.title ?? r.designation ?? "-",
+          },
+          {
+            key: "shift",
+            header: "Shift",
+            render: (r) => r.shift?.name ?? "-",
+          },
+          {
+            key: "supervisor",
+            header: "Supervisor",
+            render: (r) => r.supervisor ? `${r.supervisor.first_name} ${r.supervisor.last_name}` : "-",
+          },
           {
             key: "face_registered",
             header: "Face",
